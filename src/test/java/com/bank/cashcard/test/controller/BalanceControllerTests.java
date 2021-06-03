@@ -60,7 +60,7 @@ public class BalanceControllerTests {
     
     @Test
     public void testGetBalanceFailure() throws Exception {
-    	long accountId = 123;
+    	long accountId = 6789;
         given(this.accountService.findById(accountId))
                 .willReturn(Optional.of(new Account(4000)));
         this.mvc.perform(get("/balance/").accept(MediaType.APPLICATION_JSON))
