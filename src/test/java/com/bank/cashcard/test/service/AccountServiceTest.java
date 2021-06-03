@@ -24,13 +24,25 @@ class AccountServiceTests {
     private TestEntityManager entityManager;
 
     @Test
-    public void testFindOne() {
+    public void testCheckAmoutSuccess() {
     	double amt=400;
         this.entityManager.persist(new Account(amt));
         this.accountService.findAll();
-        Account account = this.accountService.findById(2L).get(); // ID 2 because default account 1 is created whenever the program runs
+        Account account = this.accountService.findById(2L).get(); 
+        System.out.println(account.getAmount());
         assertEquals(account.getAmount(),amt);
-//        assertThat(account.getAmount()).isEqualTo(400.0);
+
+
+    }
+    
+    @Test
+    public void testCheckAmoutFailure() {
+    	double amt=600;
+        this.entityManager.persist(new Account(amt));
+        this.accountService.findAll();
+        Account account = this.accountService.findById(2L).get(); 
+        assertNotEquals(account.getAmount(),amt);
+
 
     }
 

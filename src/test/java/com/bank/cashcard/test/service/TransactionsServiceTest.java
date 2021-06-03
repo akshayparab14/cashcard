@@ -28,12 +28,22 @@ class TransactionsServiceTests {
     private TestEntityManager entityManager;
 
     @Test
-    public void testFindByDateBetweenAndType() {
+    public void testFindByDateBetweenAndTypeSucccess() {
     	double amt=1000;
         this.entityManager.persist(new AccountTransaction(TransactionType.WITHDRAWAL.getId(), amt, new Date()));
         List<AccountTransaction> transactions = transactionsService.findByDateBetweenAndType(AccountUtils.getStartOfDay(new Date()), AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId());
         assertEquals(transactions.get(0).getType(),TransactionType.WITHDRAWAL.getId());
         assertEquals(transactions.get(0).getAmount(),amt);
+       
+    }
+    
+    @Test
+    public void testFindByDateBetweenAndTypeFailure() {
+    	double amt=1000;
+        this.entityManager.persist(new AccountTransaction(TransactionType.WITHDRAWAL.getId(), amt, new Date()));
+        List<AccountTransaction> transactions = transactionsService.findByDateBetweenAndType(AccountUtils.getStartOfDay(new Date()), AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId());
+        assertEquals(transactions.get(0).getType(),TransactionType.WITHDRAWAL.getId());
+        assertNotEquals(transactions.get(0).getAmount(),amt);
        
     }
 

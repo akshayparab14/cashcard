@@ -45,6 +45,7 @@ public class WithdrawalControllerTest {
 
 	    @MockBean
 	    protected TransactionsService transactionsService;
+	    
     @Test
     public void testWithdrawalExceedsCurrentBalance() throws Exception {
 
@@ -55,21 +56,21 @@ public class WithdrawalControllerTest {
         given(this.accountService.findById(1L)).willReturn(Optional.of(new Account(40000)));
 
         this.mvc.perform(post("/withdrawal/").contentType(MediaType.APPLICATION_JSON).content(json))
-                .andExpect(status().isOk()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"You have insufficient funds\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
+                .andExpect(status().isNotAcceptable()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"You have insufficient funds\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
 
     }
 
     @Test
-    public void testMaxWithdrawalForTheDay() throws Exception {
+    public void testMaxWithdrawalAmountPerTheDay() throws Exception {
 
         AccountTransaction transaction = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 40000, new Date());
-        AccountTransaction transaction2 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 5000, new Date());
+        AccountTransaction transaction2 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 20000, new Date());
 
         List<AccountTransaction> list = new ArrayList<>();
         list.add(transaction);
         list.add(transaction2);
 
-        UserTransaction userTransaction = new UserTransaction(8000);
+        UserTransaction userTransaction = new UserTransaction(50000);
         Gson gson = new Gson();
         String json = gson.toJson(userTransaction);
 
@@ -79,7 +80,35 @@ public class WithdrawalControllerTest {
                 AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId())).willReturn(list);
 
         this.mvc.perform(post("/withdrawal/").contentType(MediaType.APPLICATION_JSON).content(json))
-                .andExpect(status().isOk()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Withdrawal per day should not be more than $50K\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
+                .andExpect(status().isNotAcceptable()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Withdrawal per day should not be more than 50000\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
+
+    }
+    
+    @Test
+    public void testMaxTrasactionPerTheDay() throws Exception {
+
+        AccountTransaction transaction = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 20000, new Date());
+        AccountTransaction transaction2 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 20000, new Date());
+        AccountTransaction transaction3 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 10000, new Date());
+        AccountTransaction transaction4 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 20000, new Date());
+        
+        List<AccountTransaction> list = new ArrayList<>();
+        list.add(transaction);
+        list.add(transaction2);
+        list.add(transaction3);
+        list.add(transaction4);
+
+        UserTransaction userTransaction = new UserTransaction(80000);
+        Gson gson = new Gson();
+        String json = gson.toJson(userTransaction);
+
+        given(this.accountService.findById(1L)).willReturn(Optional.of(new Account(400000)));
+
+        given(this.transactionsService.findByDateBetweenAndType(AccountUtils.getStartOfDay(new Date()),
+                AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId())).willReturn(list);
+
+        this.mvc.perform(post("/withdrawal/").contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isNotAcceptable()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Withdrawal per day should not be more than 3\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
 
     }
 
@@ -103,35 +132,10 @@ public class WithdrawalControllerTest {
                 AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId())).willReturn(list);
 
         this.mvc.perform(post("/withdrawal/").contentType(MediaType.APPLICATION_JSON).content(json))
-                .andExpect(status().isOk()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Exceeded Maximum Withdrawal Per Transaction\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
+                .andExpect(status().isNotAcceptable()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Exceeded Maximum Withdrawal Per Transaction 20000\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
 
     }
 
-    @Test
-    public void testMaxAllowedWithdrawalPerDay() throws Exception {
-
-        AccountTransaction transaction = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 5000, new Date());
-        AccountTransaction transaction2 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 7500, new Date());
-        AccountTransaction transaction3 = new AccountTransaction(TransactionType.WITHDRAWAL.getId(), 10500, new Date());
-
-        List<AccountTransaction> list = new ArrayList<>();
-        list.add(transaction);
-        list.add(transaction2);
-        list.add(transaction3);
-
-        UserTransaction userTransaction = new UserTransaction(1000);
-        Gson gson = new Gson();
-        String json = gson.toJson(userTransaction);
-
-        given(this.accountService.findById(1L)).willReturn(Optional.of(new Account(400000)));
-
-        given(this.transactionsService.findByDateBetweenAndType(AccountUtils.getStartOfDay(new Date()),
-                AccountUtils.getEndOfDay(new Date()), TransactionType.WITHDRAWAL.getId())).willReturn(list);
-
-        this.mvc.perform(post("/withdrawal/").contentType(MediaType.APPLICATION_JSON).content(json))
-                .andExpect(status().isOk()).andExpect(content().json("{\"success\":false,\"messages\":{\"message\":\"Maximum Withdrawal transactions for the day Exceeded\",\"title\":\"Error\"},\"errors\":{},\"data\":{},\"httpResponseCode\":406}"));
-
-    }
 
     @Test
     public void testSuccessfulWithdrawal() throws Exception {

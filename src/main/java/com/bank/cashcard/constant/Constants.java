@@ -9,7 +9,7 @@ public class Constants {
 	
 	public static final double MAX_DEPOSIT_PER_TRANSACTION = 40000;
 	public static final double MAX_DEPOSIT_PER_DAY = 150000; 
-	public static final int MAX_DEPOSIT_TRANSACTIONS_PER_DAY = 5;
+	public static final int MAX_DEPOSIT_TRANSACTIONS_PER_DAY = 3;
 	
 	public static final double MAX_WITHDRAWAL_PER_TRANSACTION = 20000; 
 	public static final double MAX_WITHDRAWAL_PER_DAY = 50000; 
